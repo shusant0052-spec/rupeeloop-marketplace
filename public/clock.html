@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Digital Clock - Multiple Time Zones</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1400px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 50px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .clocks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .clock-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+    }
+
+    .clock-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .clock-header {
+      margin-bottom: 25px;
+    }
+
+    .city-name {
+      font-size: 1.4em;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .timezone {
+      font-size: 0.85em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .digital-display {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 20px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .time {
+      font-size: 3em;
+      color: #00ff88;
+      font-weight: bold;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+      margin-bottom: 10px;
+    }
+
+    .date-display {
+      font-size: 1em;
+      color: #fff;
+      opacity: 0.8;
+    }
+
+    .day-display {
+      font-size: 0.95em;
+      color: #fff;
+      opacity: 0.7;
+    }
+
+    .analog-clock {
+      width: 200px;
+      height: 200px;
+      border: 8px solid #667eea;
+      border-radius: 50%;
+      position: relative;
+      margin: 0 auto 20px;
+      background: #f8f9ff;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .center-dot {
+      width: 15px;
+      height: 15px;
+      background: #667eea;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 10px;
+    }
+
+    .hour-hand {
+      width: 6px;
+      height: 60px;
+      background: #333;
+      margin-left: -3px;
+    }
+
+    .minute-hand {
+      width: 4px;
+      height: 80px;
+      background: #666;
+      margin-left: -2px;
+    }
+
+    .second-hand {
+      width: 2px;
+      height: 85px;
+      background: #ff4444;
+      margin-left: -1px;
+    }
+
+    .clock-label {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .clock-label-12 {
+      top: 5px;
+    }
+
+    .clock-label-3 {
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .clock-label-6 {
+      bottom: 5px;
+    }
+
+    .clock-label-9 {
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .controls {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .controls h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .add-timezone-form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-group label {
+      font-size: 0.9em;
+      color: #555;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 10px 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+      font-family: inherit;
+      transition: border-color 0.3s ease;
+      min-width: 200px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-add {
+      padding: 10px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-remove {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .btn-remove:hover {
+      background: #cc0000;
+    }
+
+    .clock-card {
+      position: relative;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 25px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: #667eea;
+      border-color: white;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .info-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      color: #333;
+    }
+
+    .info-section h2 {
+      margin-bottom: 15px;
+      color: #667eea;
+    }
+
+    .info-section p {
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .timezone-list {
+      max-height: 300px;
+      overflow-y: auto;
+      background: #f8f9ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+
+    .timezone-item {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.95em;
+    }
+
+    .timezone-item:last-child {
+      border-bottom: none;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8em;
+      }
+
+      .time {
+        font-size: 2em;
+      }
+
+      .clocks-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .add-timezone-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .form-group input,
+      .form-group select,
+      .btn-add {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1><i class="fas fa-globe"></i> World Digital Clock</h1>
+      <p>Real-time clocks in different time zones</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('clocks')">
+        <i class="fas fa-clock"></i> Clocks
+      </button>
+      <button class="tab-btn" onclick="switchTab('manage')">
+        <i class="fas fa-cog"></i> Manage
+      </button>
+      <button class="tab-btn" onclick="switchTab('info')">
+        <i class="fas fa-info-circle"></i> Info
+      </button>
+    </div>
+
+    <!-- Clocks Tab -->
+    <div id="clocks-tab" class="tab-content active">
+      <div class="clocks-grid" id="clocksContainer">
+        <!-- Clocks will be added here dynamically -->
+      </div>
+    </div>
+
+    <!-- Manage Tab -->
+    <div id="manage-tab" class="tab-content">
+      <div class="controls">
+        <h2><i class="fas fa-plus"></i> Add New Timezone</h2>
+        <div class="add-timezone-form">
+          <div class="form-group">
+            <label for="cityInput">City Name</label>
+            <input type="text" id="cityInput" placeholder="e.g., New York">
+          </div>
+          <div class="form-group">
+            <label for="timezoneSelect">Timezone</label>
+            <select id="timezoneSelect">
+              <option value="UTC">UTC (London)</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="America/Chicago">America/Chicago</option>
+              <option value="America/Denver">America/Denver</option>
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="Europe/Moscow">Europe/Moscow</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+              <option value="Asia/Kolkata">Asia/Kolkata</option>
+              <option value="Asia/Bangkok">Asia/Bangkok</option>
+              <option value="Asia/Shanghai">Asia/Shanghai</option>
+              <option value="Asia/Hong_Kong">Asia/Hong_Kong</option>
+              <option value="Asia/Tokyo">Asia/Tokyo</option>
+              <option value="Asia/Singapore">Asia/Singapore</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+              <option value="Australia/Melbourne">Australia/Melbourne</option>
+              <option value="Pacific/Auckland">Pacific/Auckland</option>
+              <option value="Asia/Kolkata">Asia/Kolkata (India)</option>
+              <option value="Asia/Jakarta">Asia/Jakarta (Indonesia)</option>
+            </select>
+          </div>
+          <button class="btn-add" onclick="addTimezone()">
+            <i class="fas fa-plus"></i> Add Timezone
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Tab -->
+    <div id="info-tab" class="tab-content">
+      <div class="info-section">
+        <h2><i class="fas fa-book"></i> About This Clock</h2>
+        <p>This digital clock displays the current time in multiple time zones simultaneously. You can add or remove time zones as needed.</p>
+        
+        <h2 style="margin-top: 25px;"><i class="fas fa-list"></i> Available Timezones</h2>
+        <div class="timezone-list" id="timezonesList">
+          <!-- Timezones will be listed here -->
+        </div>
+        
+        <h2 style="margin-top: 25px;"><i class="fas fa-lightbulb"></i> Features</h2>
+        <p>✓ Real-time clock updates every second</p>
+        <p>✓ Analog and digital display for each timezone</p>
+        <p>✓ Current date and day of week</p>
+        <p>✓ Add/remove timezones dynamically</p>
+        <p>✓ Responsive design for mobile devices</p>
+        <p>✓ Beautiful gradient UI with smooth animations</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Default timezones
+    let timezones = [
+      { city: 'London', timezone: 'Europe/London', showAnalog: true },
+      { city: 'New York', timezone: 'America/New_York', showAnalog: true },
+      { city: 'Tokyo', timezone: 'Asia/Tokyo', showAnalog: true },
+      { city: 'Sydney', timezone: 'Australia/Sydney', showAnalog: true },
+      { city: 'Dubai', timezone: 'Asia/Dubai', showAnalog: true },
+      { city: 'India', timezone: 'Asia/Kolkata', showAnalog: true }
+    ];
+
+    // Initialize timezones list
+    function populateTimezonesList() {
+      const list = document.getElementById('timezonesList');
+      const timezoneSelect = document.getElementById('timezoneSelect');
+      
+      let html = '';
+      Array.from(timezoneSelect.options).forEach(option => {
+        if (option.value !== '') {
+          html += `<div class="timezone-item">${option.text}</div>`;
+        }
+      });
+      
+      list.innerHTML = html;
+    }
+
+    // Add timezone
+    function addTimezone() {
+      const cityInput = document.getElementById('cityInput');
+      const timezoneSelect = document.getElementById('timezoneSelect');
+      
+      const city = cityInput.value.trim();
+      const timezone = timezoneSelect.value;
+      
+      if (!city) {
+        alert('Please enter a city name');
+        return;
+      }
+      
+      // Check if timezone already exists
+      if (timezones.some(t => t.timezone === timezone)) {
+        alert('This timezone is already added');
+        return;
+      }
+      
+      timezones.push({ city, timezone, showAnalog: true });
+      cityInput.value = '';
+      updateClocks();
+    }
+
+    // Remove timezone
+    function removeTimezone(index) {
+      timezones.splice(index, 1);
+      updateClocks();
+    }
+
+    // Switch tabs
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(tabName + '-tab').classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Format time with leading zero
+    function padZero(num) {
+      return String(num).padStart(2, '0');
+    }
+
+    // Get time for timezone
+    function getTimeForTimezone(timezone) {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        weekday: 'long',
+        hour12: false
+      });
+
+      const parts = formatter.formatToParts(new Date());
+      const result = {};
+      parts.forEach(part => {
+        result[part.type] = part.value;
+      });
+      
+      return result;
+    }
+
+    // Update all clocks
+    function updateClocks() {
+      const container = document.getElementById('clocksContainer');
+      
+      container.innerHTML = timezones.map((tz, index) => {
+        const time = getTimeForTimezone(tz.timezone);
+        const hours = parseInt(time.hour);
+        const minutes = parseInt(time.minute);
+        const seconds = parseInt(time.second);
+        
+        // Calculate hand rotations
+        const secondRotation = (seconds * 6);
+        const minuteRotation = (minutes * 6) + (seconds * 0.1);
+        const hourRotation = ((hours % 12) * 30) + (minutes * 0.5);
+        
+        return `
+          <div class="clock-card">
+            <button class="btn-remove" onclick="removeTimezone(${index})">×</button>
+            
+            <div class="clock-header">
+              <div class="city-name">${tz.city}</div>
+              <div class="timezone">${tz.timezone}</div>
+            </div>
+            
+            <div class="analog-clock">
+              <div class="label clock-label clock-label-12">12</div>
+              <div class="label clock-label clock-label-3">3</div>
+              <div class="label clock-label clock-label-6">6</div>
+              <div class="label clock-label clock-label-9">9</div>
+              
+              <div class="hand hour-hand" style="transform: rotate(${hourRotation}deg)"></div>
+              <div class="hand minute-hand" style="transform: rotate(${minuteRotation}deg)"></div>
+              <div class="hand second-hand" style="transform: rotate(${secondRotation}deg)"></div>
+              
+              <div class="center-dot"></div>
+            </div>
+            
+            <div class="digital-display">
+              <div class="time">${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}</div>
+              <div class="date-display">${time.month}/${time.day}/${time.year}</div>
+              <div class="day-display">${time.weekday}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Update clocks every second
+    setInterval(updateClocks, 1000);
+
+    // Initial setup
+    window.addEventListener('DOMContentLoaded', () => {
+      populateTimezonesList();
+      updateClocks();
+    });
+  </script>
+</body>
+</html>
